@@ -3,7 +3,7 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Mess
 from urllib.parse import urlencode
 import requests
 
-# Храним информацию о пользователях
+
 user_data = {}
 user_states = {}
 
@@ -12,13 +12,12 @@ CHOOSING_RATE = 0
 ENTERING_NAME = 1
 ENTERING_TEST = 2
 ENTERING_CLASS = 3
-ENTERING_TOTAL_TASKS = 4  # Новое состояние для общего количества заданий
+ENTERING_TOTAL_TASKS = 4  
 ENTERING_CORRECT_TASKS = 5
 ENTERING_TIME = 6
 ENTERING_POINTS = 7
 ENTERING_EFFICIENCY = 8
 
-# Шаг 1: Запуск бота с кнопками для выбора оценки
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
         [InlineKeyboardButton("2", callback_data='2')],
@@ -31,20 +30,16 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_states[update.message.chat_id] = CHOOSING_RATE
 
-# Шаг 2: Обработка выбора оценки
 async def handle_rate_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     selected_number = query.data
     chat_id = query.message.chat_id
-
-    # Сохраняем выбранную оценку
     user_data[chat_id] = {'rate': selected_number}
     user_states[chat_id] = ENTERING_NAME
 
     await query.edit_message_text(f"Вы выбрали оценку {selected_number}. Теперь введите ваше ФИ:")
 
-# Шаг 3: Обработка сообщений (ввод данных)
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.message.chat_id
     message_text = update.message.text
@@ -93,21 +88,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif state == ENTERING_EFFICIENCY:
         user_data[chat_id]['efficiency'] = message_text
 
-        # Применяем коэффициенты в зависимости от выбранной оценки
-        rate = int(user_data[chat_id].get('rate', 5))  # Конвертируем оценку в число для проверки
+
+        rate = int(user_data[chat_id].get('rate', 5))  
         total_tasks = int(user_data[chat_id].get('total_tasks', 0))
         correct_tasks = int(user_data[chat_id].get('correct_tasks', 0))
         points = int(user_data[chat_id].get('points', 0))
         efficiency = float(user_data[chat_id].get('efficiency', 100))
 
         if rate == 3:
-            coefficient = 0.8  # Понижающий коэффициент для оценки 3
+            coefficient = 0.8  
         elif rate == 4:
-            coefficient = 0.9  # Понижающий коэффициент для оценки 4
+            coefficient = 0.9  
         else:
-            coefficient = 1.0  # Для оценок 2 и 5 изменений нет
+            coefficient = 1.0 
 
-        # Применяем коэффициенты
         adjusted_correct_tasks = int(correct_tasks * coefficient)
         adjusted_points = int(points * coefficient)
         adjusted_efficiency = efficiency * coefficient
@@ -133,7 +127,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             'efficiency': efficiency
         }
 
-        # Отправляем POST-запрос
         response = requests.post('http://videouroki.site/', json=data)
 
         if response.status_code == 200:
@@ -142,7 +135,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(f"Произошла ошибка при отправке данных на сервер. Код ошибки: {response.status_code}")
 
 
-        # Формируем ссылку с параметрами
         base_url = "http://videouroki.site/"
         params = {
             'rate': rate,
@@ -168,16 +160,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         user_data.pop(chat_id, None)
         user_states.pop(chat_id, None)
 
-# Основная функция для запуска бота
 def main():
-    application = Application.builder().token("7503825607:AAESpF9Jnuz1Bqs5Q3XuT6y6JMDqENG_zas").build()
-
-    # Обработчики команд и сообщений
+    application = Application.builder().token("-----------------------").build()
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CallbackQueryHandler(handle_rate_selection))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    # Запуск бота
     application.run_polling()
 if __name__ == '__main__':
     main()
