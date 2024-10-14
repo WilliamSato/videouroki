@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="30" height="37" viewBox="0 0 30 37">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fafafa;
+        fill-rule: evenodd;
+      }
+    </style>
+  </defs>
+  <path id="rectangle-gray" class="cls-1" d="M0,0H30V32L15,37,0,32V0Z"/>
+</svg>
